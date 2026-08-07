@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('cmdgui', {
   listSkills: () => ipcRenderer.invoke('skills:list'),
   listAgents: () => ipcRenderer.invoke('agents:list'),
   getConfig: () => ipcRenderer.invoke('config:get'),
+  runCommand: (payload) => ipcRenderer.invoke('run:command', payload),
   onRunEvent: (cb) => {
     const listener = (_e, evt) => cb(evt);
     ipcRenderer.on('run:event', listener);

@@ -3,7 +3,7 @@
  * MCP servers, skills, custom agents, and settings. These shell out to the
  * real `cmd` CLI (documented subcommands) rather than duplicating state.
  */
-import { execFile } from 'node:child_process';
+import { execFile, exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { promises as fs } from 'node:fs';
 import { homedir } from 'node:os';
@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import { getResolvedExecutable } from './cli/commandBuilder.js';
 
 const execFileAsync = promisify(execFile);
+const execAsync = promisify(exec);
 
 export interface McpServerInfo {
   name: string;
@@ -123,5 +124,52 @@ export async function readSettings(): Promise<SettingsSnapshot> {
     };
   } catch {
     return { raw: {} };
+  }
+}
+
+export interface ProjectResult {
+  code: number;
+  stdout: string;
+  stderr: string;
+}
+
+/**
+ * Run a trusted, project-defined shell command (e.g. a gauntlet check like
+ * `npm run check`). Resolves with { code, stdout, stderr }; never throws — a
+ * timeout, non-zero exit, or kill is surfaced as a non-zero `code` so callers
+ * can react instead of hanging the gauntlet on a stuck check.
+ *
+ * Security: `command` is a single string run through the system shell, so it
+ * must come from trusted project config (gauntlet checks), never free user text.
+ * Newlines are rejected to block command-chaining injection.
+ */
+export async function runProjectCommand(
+  command: string,
+  cwd: string,
+  timeoutMs = 30_000,
+): Promise<ProjectResult> {
+  if (typeof command !== 'string' || !command.trim()) {
+    return { code: 2, stdout: '', stderr: 'empty command' };
+  }
+  if (command.includes('\n') || command.includes('\r')) {
+    return { code: 2, stdout: '', stderr: 'command must not span lines' };
+  }
+  try {
+    const { stdout, stderr } = await execAsync(command, {
+      cwd,
+      env: { ...process.env, NO_COLOR: '1' },
+      maxBuffer: 4 * 1024 * 1024,
+      timeout: timeoutMs,
+      windowsHide: true,
+    });
+    return { code: 0, stdout, stderr };
+  } catch (e) {
+    const err = e as { code?: number | string; killed?: boolean; stdout?: string; stderr?: string; message?: string };
+    const code = typeof err.code === 'number' ? err.code : err.killed ? 124 : 1;
+    return {
+      code,
+      stdout: err.stdout ?? '',
+      stderr: err.stderr ?? err.message ?? '',
+    };
   }
 }

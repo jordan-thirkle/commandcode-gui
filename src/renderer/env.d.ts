@@ -12,6 +12,11 @@ export interface CmdGuiApi {
   listSkills(): Promise<SkillInfo[]>;
   listAgents(): Promise<AgentInfo[]>;
   getConfig(): Promise<SettingsSnapshot>;
+  runCommand(payload: { command: string; timeoutMs?: number }): Promise<{
+    code: number;
+    stdout: string;
+    stderr: string;
+  }>;
   onRunEvent(cb: (evt: BridgeEvent) => void): () => void;
 }
 

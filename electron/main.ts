@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 import { CliBridge } from '../src/main/cli/CliBridge.js';
 import { RunManager } from '../src/main/RunManager.js';
 import { listSessions, readTranscript } from '../src/main/sessionStore.js';
-import { listMcpServers, listSkills, listAgents, readSettings } from '../src/main/surface.js';
+import { listMcpServers, listSkills, listAgents, readSettings, runProjectCommand } from '../src/main/surface.js';
 
 const { app, BrowserWindow, ipcMain } = electron;
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -23,16 +23,28 @@ function registerIpc(win: BrowserWindowType): void {
   runManager.attachWindow(win);
 
   ipcMain.handle('run:start', (_e, payload) => {
+    const pm = payload?.permissionMode;
+    if (pm !== undefined && !['standard', 'plan', 'auto-accept'].includes(pm)) {
+      return { ok: false, error: `invalid permissionMode: ${pm}` };
+    }
     runManager.startRun({
       prompt: String(payload?.prompt ?? ''),
       model: payload?.model,
       effort: payload?.effort,
       resume: payload?.resume,
       continueRecent: payload?.continueRecent,
-      permissionMode: payload?.permissionMode,
+      permissionMode: pm,
       cwd: workspaceRoot,
     });
     return { ok: true };
+  });
+
+  ipcMain.handle('run:command', (_e, payload) => {
+    const { command, timeoutMs } = payload ?? {};
+    if (typeof command !== 'string' || !command.trim()) {
+      return { code: 2, stdout: '', stderr: 'invalid command' };
+    }
+    return runProjectCommand(command, workspaceRoot, timeoutMs);
   });
 
   ipcMain.handle('run:abort', () => {

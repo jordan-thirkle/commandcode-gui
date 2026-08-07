@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import type { GauntletConfig } from '../gauntlet/stateMachine';
-import { gauntletReducer, createInitialState } from '../gauntlet/stateMachine';
+import { runGauntlet, type GauntletDeps } from '../gauntlet/runner';
+import {
+  gauntletReducer,
+  createInitialState,
+  type GauntletConfig,
+  type GauntletAction,
+} from '../gauntlet/stateMachine';
 
 interface Props {
   onRun: (prompt: string, opts?: { resume?: string; continueRecent?: boolean }) => void;
@@ -49,70 +54,77 @@ export function GauntletView({ onRun, running }: Props): React.JSX.Element {
   const [state, setState] = useState(() => createInitialState(config));
   const [busy, setBusy] = useState(false);
 
-  // Wire the app's run/status into a local gauntlet execution. The runner is
-  // transport-agnostic; here we drive it with the same onRun the chat uses,
-  // collecting each round's output from the live run events.
+  // The gauntlet runner (src/gauntlet/runner.ts) is pure and already unit-tested.
+  // We wire it to the live CLI transport: each builder system launches a real
+  // headless run; each check runs as a real shell command via IPC; the critic
+  // grades real screenshots. There are NO fabricated verdicts — if a step can't
+  // run (e.g. no screenshot source), the error surfaces honestly instead of a
+  // fake PASS.
+  const runPrompt = (prompt: string, opts?: { model?: string; effort?: string }): Promise<string> => {
+    return new Promise<string>((resolve) => {
+      let done = false;
+      const unsub = window.cmdgui?.onRunEvent((evt) => {
+        if (evt.kind === 'summary' && !done) {
+          done = true;
+          unsub?.();
+          resolve(evt.summary.finalText ?? '');
+        }
+      });
+      void window.cmdgui?.run({
+        prompt,
+        model: opts?.model ?? config.model,
+        effort: opts?.effort ?? 'high',
+      });
+    });
+  };
+
+  const runCommand = (command: string): Promise<{ code: number; stdout: string }> => {
+    if (!window.cmdgui) return Promise.resolve({ code: 1, stdout: '' });
+    return window.cmdgui.runCommand({ command }).then((r) => ({
+      code: typeof r?.code === 'number' ? r.code : 1,
+      stdout: r?.stdout ?? '',
+    }));
+  };
+
+  const captureScreenshot = (cam: string): Promise<string> => {
+    if (!window.cmdgui) return Promise.reject(new Error('renderer unavailable'));
+    return window.cmdgui
+      .runCommand({ command: `npm run screenshot -- "${cam}"` })
+      .then((r) => {
+        if (typeof r?.code === 'number' && r.code !== 0) {
+          throw new Error(
+            `Capture failed (exit ${r.code}). Add a "screenshot" npm script (e.g. "node tools/cdp-shot.js") to enable visual grading.`,
+          );
+        }
+        const lines = (r?.stdout ?? '')
+          .trim()
+          .split(/\r?\n/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+        return lines[lines.length - 1] ?? cam;
+      });
+  };
+
+  const gauntletDeps: GauntletDeps = {
+    runPrompt,
+    runCommand,
+    cams: config.screenshotCam ? [config.screenshotCam] : undefined,
+    captureScreenshot: config.screenshotCam ? captureScreenshot : undefined,
+  };
+
   const start = (): void => {
     if (busy) return;
     setBusy(true);
     let next = createInitialState(config);
-    const dispatch = (action: Parameters<typeof gauntletReducer>[1]): void => {
+    const dispatch = (action: GauntletAction): void => {
       next = gauntletReducer(next, action);
       setState(next);
     };
-
-    void (async () => {
-      try {
-        dispatch({ type: 'start-round' });
-        const round = next.rounds[next.rounds.length - 1];
-        for (const system of round?.systems ?? []) {
-          dispatch({ type: 'system-start', systemId: system.id });
-          try {
-            const text = await new Promise<string>((resolve) => {
-              const unsub = window.cmdgui?.onRunEvent((evt) => {
-                if (evt.kind === 'summary') {
-                  unsub?.();
-                  resolve(evt.summary.finalText);
-                }
-              });
-              onRun(system.prompt);
-            });
-            dispatch({ type: 'system-done', systemId: system.id, ok: true, output: text });
-          } catch (e) {
-            dispatch({
-              type: 'system-done',
-              systemId: system.id,
-              ok: false,
-              output: e instanceof Error ? e.message : String(e),
-            });
-          }
-        }
-
-        for (const check of config.checks) {
-          // In the real app these run via RunManager; here we surface them as
-          // pending so the board reflects the gate even without a local shell.
-          dispatch({
-            type: 'check-result',
-            check: { name: check.name, pass: true, detail: 'gate recorded' },
-          });
-        }
-        dispatch({ type: 'checks-complete' });
-        dispatch({
-          type: 'verdict',
-          verdict: {
-            pass: true,
-            raw: 'PASS — the independent critic cleared the frame after this round.',
-          },
-        });
-      } catch (e) {
-        dispatch({
-          type: 'set-error',
-          message: e instanceof Error ? e.message : String(e),
-        });
-      } finally {
-        setBusy(false);
-      }
-    })();
+    void runGauntlet(config, gauntletDeps, dispatch)
+      .catch((e) =>
+        dispatch({ type: 'set-error', message: e instanceof Error ? e.message : String(e) }),
+      )
+      .finally(() => setBusy(false));
   };
 
   const round = state.rounds[state.rounds.length - 1];
