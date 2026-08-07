@@ -9,8 +9,9 @@ productizes the **Gauntlet Loop** — the DUSTLINE game-dev process of split →
 builders → judge with a vision critic → iterate — as a first-class UI mode.
 
 Status: **Working MVP (0.1.0).** Core chat, sessions, gauntlet, and skills/MCP surfaces
-work and are tested (29 vitest tests). Set-and-forget dev is live: CI, templates, and
-Dependabot are in place.
+work and are tested (31 vitest tests + smoke checks). Set-and-forget dev is live: CI,
+templates, and Dependabot are in place. The Gauntlet Studio checks/critic are wired to the
+real CLI runner (no fabricated verdicts).
 
 ---
 
@@ -96,21 +97,32 @@ the Command Code CLI. `src/main/cli/resolveCmd.ts` resolves the npm-global
 4. **Checks** — `npm run check` / `npm run test:modes` gate each round; a failing check
    records evidence and skips the critic.
 5. **Critic** — a fresh-context run of the project's `visual-critic` agent grades the real
-   screenshot PNG, returning PASS/FAIL + severity + a surgical work order.
+   screenshot PNG, returning PASS/FAIL + severity + a surgical work order. The GUI captures
+   frames via a project `screenshot` npm script; if none is defined, the critic step fails
+   honestly instead of guessing a PASS.
 6. **Iterate** — on FAIL, the next round is spawned with the work order as focus, bounded by
    max rounds.
 
 ## Tests
 
 ```bash
-npm test              # vitest — bridge parser, command builder, gauntlet state machine, critic parsing
+npm test              # vitest — 31 tests (bridge NDJSON parser, command builder, gauntlet state machine + critic parsing, renderer render-smoke)
 npm run typecheck     # tsc --noEmit
-npm run build         # full build
+npm run build         # typecheck + compile main + vite build
+npm run smoke         # build + compiled-main import smoke + CLI bridge e2e (local only)
 ```
 
-CI runs all three on every PR and push (see `.github/workflows/ci.yml`). The bridge parser
-test feeds the exact documented NDJSON shapes from the Command Code headless reference and
-asserts typed events, result frames, and forward-compatible ignoring of unknown event types.
+CI runs typecheck, the unit tests, and the full build on every PR and push, on Ubuntu/macOS/Windows
+(see `.github/workflows/ci.yml`). The unit suite covers the bridge NDJSON parser (it feeds the
+exact documented event shapes and asserts typed frames, result frames, and forward-compatible
+ignoring of unknowns), the gauntlet state machine, the critic verdict parser, the command
+builder, and a renderer render-smoke test (via `react-dom/server`, no jsdom) that guards against
+import/initial-render regressions.
+
+The CLI bridge end-to-end test (`tests/bridge-e2e.mjs`) is **local-only**: it spawns the real
+Command Code CLI with a model call, so it needs your authenticated install. It is designed to
+fail honestly — it skips (never false-passes) when the CLI can't be resolved, and only reports
+ok when it actually sees a `result` frame.
 
 ## Surface coverage
 

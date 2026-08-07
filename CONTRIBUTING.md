@@ -58,6 +58,21 @@ It spawns the real CLI per run and parses the documented NDJSON stream. Keep it 
 `HarnessBridge` can import `createHarness` from a published `@commandcode/harness` behind
 the same interface. If you touch it, preserve the interface contract.
 
+## Gauntlet Studio
+
+The gauntlet runner (`src/gauntlet/runner.ts`) is pure and unit-tested; the renderer
+(`src/renderer/GauntletView.tsx`) wires it to the real transport:
+
+- **System builds** each spawn a real headless CLI run.
+- **Checks** run as real shell commands over a bounded `runCommand` IPC (timeout-guarded,
+  never blocking the gate forever).
+- **Critic** grades a real screenshot captured from a project `screenshot` npm script. If
+  no screenshot source is configured, the critic step **fails honestly** instead of
+  guessing a PASS.
+
+If you touch the check/critic path, extend `src/gauntlet/runner.ts` (and its tests), not the
+renderer's wiring. Keep the runner transport-agnostic.
+
 ## Submitting a PR
 
 1. Fork the repo.
