@@ -5,6 +5,27 @@
   "description": "Native desktop GUI for Command Code, with a Gauntlet Studio for the DUSTLINE game-dev loop.",
   "type": "module",
   "main": "dist/main/electron/main.js",
+  "license": "MIT",
+  "keywords": [
+    "command-code",
+    "ai",
+    "gui",
+    "electron",
+    "react",
+    "coding-agent",
+    "gauntlet"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jordan-thirkle/commandcode-gui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jordan-thirkle/commandcode-gui/issues"
+  },
+  "homepage": "https://github.com/jordan-thirkle/commandcode-gui#readme",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "npm run typecheck && tsc -p tsconfig.main.json && node scripts/copy-assets.mjs && vite build",

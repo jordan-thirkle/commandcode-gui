@@ -119,16 +119,18 @@ export function ChatPane({ running, onRun, onAbort, sessionId }: Props): React.J
           }
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault();
               submit();
             }
           }}
         />
         {running ? (
-          <button onClick={onAbort}>Stop</button>
+          <button onClick={onAbort} title="Stop (Esc)">
+            Stop
+          </button>
         ) : (
-          <button onClick={submit} disabled={!input.trim()}>
+          <button onClick={submit} disabled={!input.trim()} title="Run (Ctrl+Enter)">
             Run
           </button>
         )}

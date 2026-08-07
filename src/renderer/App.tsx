@@ -33,9 +33,35 @@ export function App(): React.JSX.Element {
     durationMs: 0,
   });
   const [mcpStatus, setMcpStatus] = useState<string>('');
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   const statusRef = useRef(status);
   statusRef.current = status;
+
+  // Global keyboard shortcuts: Ctrl+K command palette, Esc to close/stop.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((open) => !open);
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (paletteOpen) {
+          setPaletteOpen(false);
+        } else if (statusRef.current.running) {
+          void window.cmdgui?.abort();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [paletteOpen]);
+
+  const go = (v: View): void => {
+    setView(v);
+    setPaletteOpen(false);
+  };
 
   useEffect(() => {
     if (!window.cmdgui) return;
@@ -88,11 +114,16 @@ export function App(): React.JSX.Element {
           <div
             key={v}
             className={`nav-item${view === v ? ' active' : ''}`}
-            onClick={() => setView(v)}
+            onClick={() => go(v)}
           >
             {v[0].toUpperCase() + v.slice(1)}
           </div>
         ))}
+        <div className="sidebar-footer">
+          <button className="palette-btn" onClick={() => setPaletteOpen(true)} title="Command palette (Ctrl+K)">
+            <span>⌘</span> Command…
+          </button>
+        </div>
       </aside>
 
       <header className="header">
@@ -154,6 +185,14 @@ export function App(): React.JSX.Element {
         {status.error && <span className="err">{status.error}</span>}
         {!status.running && <span>{mcpStatus}</span>}
       </footer>
+
+      {paletteOpen && (
+        <CommandPalette
+          current={view}
+          onPick={go}
+          onClose={() => setPaletteOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -192,6 +231,63 @@ function updateStatus(s: RunState, evt: BridgeEvent): RunState {
     default:
       return s;
   }
+}
+
+function CommandPalette({ current, onPick, onClose }: {
+  current: View;
+  onPick: (v: View) => void;
+  onClose: () => void;
+}): React.JSX.Element {
+  const [query, setQuery] = useState('');
+  const items: Array<{ v: View; label: string; hint: string }> = [
+    { v: 'chat', label: 'Chat', hint: 'New run / continue' },
+    { v: 'sessions', label: 'Sessions', hint: 'List, resume, transcript' },
+    { v: 'gauntlet', label: 'Gauntlet Studio', hint: 'Game-dev quality loop' },
+    { v: 'skills', label: 'Skills', hint: 'Installed skills' },
+    { v: 'mcp', label: 'MCP servers', hint: 'Server status' },
+  ];
+  const filtered = items.filter((i) =>
+    i.label.toLowerCase().includes(query.toLowerCase()),
+  );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div className="palette-overlay" onClick={onClose}>
+      <div className="palette" onClick={(e) => e.stopPropagation()}>
+        <input
+          autoFocus
+          value={query}
+          placeholder="Jump to…"
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && filtered[0]) {
+              onPick(filtered[0].v);
+            }
+          }}
+        />
+        <div className="palette-items">
+          {filtered.map((i) => (
+            <div
+              key={i.v}
+              className={`palette-item${i.v === current ? ' active' : ''}`}
+              onClick={() => onPick(i.v)}
+            >
+              <span className="p-label">{i.label}</span>
+              <span className="p-hint">{i.hint}</span>
+            </div>
+          ))}
+          {filtered.length === 0 && <div className="palette-empty">No matches</div>}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function SkillsMcpPanel(): React.JSX.Element {
