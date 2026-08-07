@@ -10,7 +10,10 @@ import { listMcpServers, listSkills, listAgents, readSettings } from '../src/mai
 const { app, BrowserWindow, ipcMain } = electron;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const isDev = !app.isPackaged;
+// Allow the compiled module to be imported outside an Electron runtime
+// (e.g. the smoke test) without crashing on `app.isPackaged`.
+const isElectronRuntime = !!app?.isPackaged;
+const isDev = isElectronRuntime && !app.isPackaged;
 const workspaceRoot = process.cwd();
 
 const bridge = new CliBridge();
@@ -78,14 +81,19 @@ async function createWindow(): Promise<BrowserWindowType> {
   return win;
 }
 
-app.whenReady().then(async () => {
-  await createWindow();
+if (isElectronRuntime && app) {
+  app.whenReady().then(async () => {
+    await createWindow();
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) void createWindow();
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) void createWindow();
+    });
   });
-});
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
+  });
+}
+
+// No-op when imported under plain node (smoke test): the app simply does not
+// start, which is exactly what an import-resolve smoke check wants.

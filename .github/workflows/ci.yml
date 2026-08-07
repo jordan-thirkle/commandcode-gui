@@ -30,6 +30,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Smoke test (compiled main + CLI bridge e2e)
+        run: |
+          node tests/smoke-compiled-main.mjs
+          node tests/bridge-e2e.mjs
+
   electron-build:
     name: Electron build (${{ matrix.os }})
     needs: test
