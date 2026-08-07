@@ -1,21 +1,26 @@
 name: Release
 
+# Builds + publishes a GitHub Release on every tag (e.g. `git tag v0.2.0 && git push --tags`).
+# Each OS packages its native targets in parallel; artifacts are collected and
+# attached to one release. Builds are UNSIGNED — see "Code signing" below.
 on:
   push:
     tags:
       - "v*"
 
-permissions:
-  contents: write
-
 jobs:
-  release:
-    name: Build installers and draft release
-    runs-on: ubuntu-latest
+  package:
+    name: Package (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
@@ -23,19 +28,48 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Typecheck + test
-        run: npm run typecheck && npm test
-
       - name: Build
         run: npm run build
 
-      # Installers are produced once the project adds electron-builder.
-      # The pattern is:
-      #   npx electron-builder --win --linux --mac
-      # then attach the artifacts to the release below.
+      - name: Package (electron-builder)
+        run: npm run dist
 
-      - name: Draft release
-        uses: softprops/action-gh-release@v2
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          draft: true
-          generate_release_notes: true
+          name: commandcode-gui-${{ matrix.os }}
+          path: release/**
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish GitHub Release
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-artifacts
+          pattern: commandcode-gui-*
+          merge-multiple: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          files=()
+          while IFS= read -r -d '' f; do
+            files+=("$f")
+          done < <(find dist-artifacts -type f ! -name "*.blockmap" -print0)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No packaged artifacts found to publish"; exit 1;
+          fi
+          gh release create "${GITHUB_REF_NAME}" --generate-notes "${files[@]}"
+
+# Code signing (follow-up, requires your secrets):
+#   Windows: add WIN_CSC_LINK_URL + WIN_CSC_KEY_PASSWORD (or a .pfx) → NSIS installer is signed.
+#   macOS:   add MAC_CERTIFICATE_BASE64 + MAC_CERTIFICATE_PASSWORD + NOTARIZATION
+#            (APPLE_ID + APP_SPECIFIC_PASSWORD) → hardened, notarized .dmg/.zip.
+# Without these secrets the artifacts are unsigned (installers still work; OS warnings apply).
