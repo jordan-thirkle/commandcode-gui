@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Install &amp; Quickstart — Command Code GUI</title>
+  <meta name="description" content="Install Command Code GUI: an open-source Electron desktop app for the Command Code coding agent. Requirements, two-command setup, first-run walkthrough, and troubleshooting." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://games.byjtt.com/commandcode-gui/install.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Command Code GUI" />
+  <meta property="og:title" content="Install &amp; Quickstart — Command Code GUI" />
+  <meta property="og:description" content="Two-command setup for the Command Code desktop GUI, with requirements and troubleshooting." />
+  <meta property="og:url" content="https://games.byjtt.com/commandcode-gui/install.html" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Install &amp; Quickstart — Command Code GUI" />
+  <meta name="twitter:description" content="Two-command setup for the Command Code desktop GUI." />
+
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="icon" type="image/png" href="assets/img/favicon.png" />
+</head>
+<body>
+
+<nav class="nav" aria-label="Primary">
+  <div class="container">
+    <a class="brand" href="index.html"><span class="logo" aria-hidden="true"></span>Command Code GUI</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="gauntlet.html">Gauntlet Loop</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="install.html" class="active" aria-current="page">Install</a>
+    </div>
+    <a class="nav-cta" href="install.html">Get started</a>
+  </div>
+</nav>
+
+<header class="page-head">
+  <div class="container">
+    <h1>Install &amp; quickstart</h1>
+    <p>Get the Command Code GUI running on your machine in a few minutes. Everything runs locally — no account, no cloud.</p>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <h2>Requirements</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Node.js 22+</h3>
+        <p>The app (and the Command Code CLI) run on Node 22 or newer. Check with <code>node --version</code>.</p>
+      </div>
+      <div class="card">
+        <h3>Command Code CLI</h3>
+        <p>Install the coding agent it wraps: <code>npm i -g command-code</code>. The app finds it automatically.</p>
+      </div>
+      <div class="card">
+        <h3>An authenticated account</h3>
+        <p>Log in once with <code>cmd login</code> (or the Command Code Studio) so runs have credentials.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="setup" class="bg-alt">
+  <div class="container">
+    <h2>Two-command setup</h2>
+    <div class="steps">
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Clone the repository</h4>
+        <pre><code><span class="k">git</span> clone &lt;your-repo-url&gt; commandcode-gui
+<span class="k">cd</span> commandcode-gui</code></pre>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Install dependencies</h4>
+        <pre><code><span class="k">npm</span> install</code></pre>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Run</h4>
+        <pre><code><span class="k">npm</span> run dev    <span class="c"># terminal 1 — Vite dev server (localhost:5173)</span>
+<span class="k">npm</span> start       <span class="c"># terminal 2 — opens the Electron window</span></code></pre>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Or run the production build</h4>
+        <pre><code><span class="k">npm</span> run build     <span class="c"># typecheck + compile main + renderer</span>
+<span class="k">npx</span> electron .    <span class="c"># loads the built app</span></code></pre>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="first-run">
+  <div class="container">
+    <h2>First run</h2>
+    <div class="steps">
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Chat pane</h4>
+        <p>Type a prompt and press <strong>Run</strong>. The app streams the assistant's text, thinking, tool calls, and sub-agent progress live, and reports token usage in the footer.</p>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Sessions</h4>
+        <p>Open the <strong>Sessions</strong> view to browse your real session catalog, read transcripts, and resume any conversation.</p>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Gauntlet Studio</h4>
+        <p>Define an artifact and a reference bar, split it into systems, and run the loop. The board shows builder status, check results, and critic verdicts per round.</p>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Model picker</h4>
+        <p>Switch presets in the header. The default is <code>deepseek/deepseek-v4-pro</code> at effort <code>high</code> — switch to the quality-critical or bulk tier as the task demands.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="troubleshooting" class="bg-alt">
+  <div class="container">
+    <h2>Troubleshooting</h2>
+    <div class="faq">
+      <details>
+        <summary>The window opens but is blank</summary>
+        <p>In dev mode the renderer needs the Vite server on <code>localhost:5173</code>. Start it with <code>npm run dev</code> before <code>npm start</code>.</p>
+      </details>
+      <details>
+        <summary>Runs drop into a shell instead of the agent</summary>
+        <p>On Windows, <code>cmd</code> can resolve to the system shell. The app resolves the real CLI automatically — make sure the CLI is installed via <code>npm i -g command-code</code> so the npm global path is findable.</p>
+      </details>
+      <details>
+        <summary>I see "Not authenticated" errors</summary>
+        <p>Run <code>cmd login</code> once in a terminal. The GUI uses the CLI's existing credentials.</p>
+      </details>
+      <details>
+        <summary>Where are my sessions stored?</summary>
+        <p>In the standard Command Code location, <code>~/.commandcode/projects/</code>. The app reads that catalog directly — it does not duplicate it.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <span>Command Code GUI — open source. Not affiliated with or endorsed by the Command Code team.</span>
+    <span><a href="index.html">Home</a> · <a href="gauntlet.html">Gauntlet Loop</a> · <a href="architecture.html">Architecture</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Gauntlet Loop — An AI-Driven Game Development Workflow with a Visual Critic</title>
+  <meta name="description" content="The Gauntlet Loop is a repeatable AI game development workflow: split work into independent systems, fan out builder agents, run automated checks, and grade real rendered frames with a harsh visual-critic agent before iterating. Learn how to apply it to your own game project." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://games.byjtt.com/commandcode-gui/gauntlet.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Command Code GUI" />
+  <meta property="og:title" content="The Gauntlet Loop — An AI-Driven Game Development Workflow with a Visual Critic" />
+  <meta property="og:description" content="A repeatable, evidence-backed workflow for building games with AI agents: split, build, check, critique real pixels, iterate." />
+  <meta property="og:url" content="https://games.byjtt.com/commandcode-gui/gauntlet.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Gauntlet Loop — AI Game Development Workflow" />
+  <meta name="twitter:description" content="Split, build, check, and grade real rendered frames with a harsh visual critic." />
+
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="icon" type="image/png" href="assets/img/favicon.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "The Gauntlet Loop — An AI-Driven Game Development Workflow with a Visual Critic",
+    "description": "A repeatable, evidence-backed workflow for building games with AI agents: split into independent systems, fan out builders, run automated checks, and grade real rendered frames with a separate harsh critic.",
+    "author": { "@type": "Person", "name": "Jordan Thirkle" },
+    "url": "https://games.byjtt.com/commandcode-gui/gauntlet.html",
+    "about": ["AI game development", "coding agents", "visual critique", "game development workflow"]
+  }
+  </script>
+</head>
+<body>
+
+<nav class="nav" aria-label="Primary">
+  <div class="container">
+    <a class="brand" href="index.html"><span class="logo" aria-hidden="true"></span>Command Code GUI</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="gauntlet.html" class="active" aria-current="page">Gauntlet Loop</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="install.html">Install</a>
+    </div>
+    <a class="nav-cta" href="install.html">Get started</a>
+  </div>
+</nav>
+
+<header class="page-head">
+  <div class="container">
+    <h1>The Gauntlet Loop</h1>
+    <p>A repeatable, evidence-backed workflow for building games with AI agents — <strong>split</strong>, <strong>build</strong>, <strong>check</strong>, <strong>critique real pixels</strong>, <strong>iterate</strong>.</p>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <h2>Why builders should never grade their own work</h2>
+    <p class="sec-lead">The single biggest failure mode in AI-assisted development is the agent reviewing its own output. The Gauntlet Loop fixes that with a hard rule: a separate agent with fresh context grades the <em>real rendered frame</em>, never a summary.</p>
+
+    <div class="grid">
+      <div class="card">
+        <span class="badge badge-blue">The rule</span>
+        <h3>Independent critic</h3>
+        <p>Every visual system is judged by a fresh-context critic agent that reads real screenshots — never a builder's description of what it made.</p>
+      </div>
+      <div class="card">
+        <span class="badge badge-blue">The bar</span>
+        <h3>Blind A/B against AAA</h3>
+        <p>Frames are compared against a real reference (for shooters, a Call of Duty frame). If it loses, the critic names the single biggest gap and sends it back.</p>
+      </div>
+      <div class="card">
+        <span class="badge badge-blue">The loop</span>
+        <h3>Evidence over vibes</h3>
+        <p>Every round ends with a screenshot, a test result, or a verdict. Progress is visible, recorded, and repeatable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="loop" class="bg-alt">
+  <div class="container">
+    <h2>The five phases</h2>
+    <p class="sec-lead">The Gauntlet Studio automates exactly this loop in the GUI. Each phase produces something the next phase can act on.</p>
+    <div class="steps">
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Define the artifact and the bar</h4>
+        <p>Pick one concrete deliverable — a map's lighting, a weapon viewmodel, a HUD — and name the reference bar it must clear. "Good for AI" is not a bar.</p>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Split into independent systems</h4>
+        <p>Break the work into the smallest independently judgeable pieces. Each system gets isolated file ownership so builders never step on each other.</p>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Fan out builders</h4>
+        <p>Each system runs as its own agent session with a focused prompt and a strict ownership boundary. The Gauntlet Studio runs them in sequence, capturing output per system.</p>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Run automated checks</h4>
+        <p>Immediately after builders return, the studio runs the project's checks (syntax, headless simulation, screenshot capture). A failing check records evidence and skips the critic.</p>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Grade real pixels, then iterate</h4>
+        <p>The critic agent reads the real screenshot and returns PASS or FAIL — and on FAIL, a severity (1–10) and a surgical work order. Fix the single biggest gap and run the next round.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="example">
+  <div class="container">
+    <h2>What a critic verdict looks like</h2>
+    <p class="sec-lead">The critic is trained to be brutal and precise. Here is the shape of a useful FAIL verdict.</p>
+    <pre><code><span class="c"># Critic verdict — round 3, system: Map / lighting</span>
+FAIL
+severity: 9
+
+The lighting is flat and the ground reads as a single material.
+The sun has no warm bias and the contact shadow is barely visible.
+
+WORK ORDER: Raise the sun intensity to 1.8, set ground roughness
+to 0.4, and add a warm bounce fill from the left. Done = the frame
+clears the reference at reference exposure, no blown highlights.</code></pre>
+    <p style="color:var(--text-dim); font-size:14px; margin-top:12px;">One gap. One fix. A concrete definition of done. That is what makes the loop converge instead of churning.</p>
+  </div>
+</section>
+
+<section id="why-it-works" class="bg-alt">
+  <div class="container">
+    <h2>Why it works</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Fresh context catches blind spots</h3>
+        <p>The critic never saw the builder's session, so it cannot be talked into agreeing. It only sees pixels.</p>
+      </div>
+      <div class="card">
+        <h3>Isolated ownership prevents regressions</h3>
+        <p>Builders own disjoint paths, so one system's fix cannot silently break another's work.</p>
+      </div>
+      <div class="card">
+        <h3>Evidence gates every "done"</h3>
+        <p>A screenshot plus a PASS verdict is a definition of done you can ship. A summary is not.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <h2>Gauntlet Loop FAQ</h2>
+    <div class="faq">
+      <details>
+        <summary>Does the critic grade a description of the work?</summary>
+        <p>No. It reads a real screenshot file from the rendered game — the same way a human art director would. If no real screenshot exists, the critic refuses to judge.</p>
+      </details>
+      <details>
+        <summary>What happens when a check fails?</summary>
+        <p>The round records the evidence and stops before the critic phase. There is no point grading pixels on a broken build — fix the check first.</p>
+      </details>
+      <details>
+        <summary>How many rounds does a system need?</summary>
+        <p>Until the critic passes, or the critic identifies a genuine asset-pipeline ceiling. The loop is bounded by a max-rounds setting so it cannot run forever.</p>
+      </details>
+      <details>
+        <summary>Is this only for 3D shooters?</summary>
+        <p>No. The pattern applies to any visual or mechanical system: UI screens, animation, audio-reactive effects, even non-game software with a visual bar.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <span>Command Code GUI — open source. Not affiliated with or endorsed by the Command Code team.</span>
+    <span><a href="index.html">Home</a> · <a href="architecture.html">Architecture</a> · <a href="install.html">Install</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

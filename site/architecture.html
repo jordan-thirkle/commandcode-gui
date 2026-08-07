@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Architecture — How the Command Code GUI Drives the Real CLI Through Its JSON Protocol</title>
+  <meta name="description" content="How the Command Code GUI is architected: it drives the real Command Code CLI through the documented headless JSON stream, with a bridge abstraction for future engine embedding, a Windows cmd.exe resolution fix, and cost-optimal model routing." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://games.byjtt.com/commandcode-gui/architecture.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Command Code GUI" />
+  <meta property="og:title" content="Architecture — Driving the Command Code CLI Through Its JSON Protocol" />
+  <meta property="og:description" content="Electron + TypeScript, a documented NDJSON bridge, a Windows cmd.exe fix, and cost-optimal model routing." />
+  <meta property="og:url" content="https://games.byjtt.com/commandcode-gui/architecture.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Command Code GUI Architecture" />
+  <meta name="twitter:description" content="How the GUI drives the real CLI through its documented JSON stream." />
+
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="icon" type="image/png" href="assets/img/favicon.png" />
+</head>
+<body>
+
+<nav class="nav" aria-label="Primary">
+  <div class="container">
+    <a class="brand" href="index.html"><span class="logo" aria-hidden="true"></span>Command Code GUI</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="gauntlet.html">Gauntlet Loop</a>
+      <a href="architecture.html" class="active" aria-current="page">Architecture</a>
+      <a href="install.html">Install</a>
+    </div>
+    <a class="nav-cta" href="install.html">Get started</a>
+  </div>
+</nav>
+
+<header class="page-head">
+  <div class="container">
+    <h1>Architecture</h1>
+    <p>An Electron + TypeScript desktop app that drives the real Command Code CLI through its <strong>documented headless JSON protocol</strong> — no fork, no private protocol.</p>
+  </div>
+</header>
+
+<section id="bridge">
+  <div class="container">
+    <h2>The bridge: spawn the CLI, stream the JSON</h2>
+    <p class="sec-lead">Every chat run is a child process: <code>cmd -p --output-format json &lt;prompt&gt;</code>. The app parses newline-delimited JSON frames and renders them natively.</p>
+    <pre><code><span class="c"># One run, documented protocol</span>
+cmd -p --output-format json <span class="s">"polish the HUD"</span> \
+  --model deepseek/deepseek-v4-pro --effort high
+
+<span class="c"># Events stream as NDJSON, one object per line</span>
+{<span class="s">"type"</span>: <span class="s">"event"</span>, <span class="s">"event"</span>: {<span class="s">"type"</span>: <span class="s">"tool_running"</span>, ...}}
+{<span class="s">"type"</span>: <span class="s">"event"</span>, <span class="s">"event"</span>: {<span class="s">"type"</span>: <span class="s">"text_delta"</span>, ...}}
+{<span class="s">"type"</span>: <span class="s">"result"</span>, <span class="s">"subtype"</span>: <span class="s">"success"</span>, <span class="s">"sessionId"</span>: <span class="s">"..."</span>, ...}</code></pre>
+    <p style="color:var(--text-dim); font-size:14px;">Unknown event types are ignored, per the protocol's forward-compatibility contract. The GUI renders the stream; it never depends on terminal scraping.</p>
+  </div>
+</section>
+
+<section id="seam" class="bg-alt">
+  <div class="container">
+    <h2>A swap seam for the future</h2>
+    <p class="sec-lead">The transport is isolated behind a <code>Bridge</code> interface. Today it spawns the CLI; tomorrow it can import the engine directly without touching the UI.</p>
+    <div class="grid">
+      <div class="card">
+        <h3><code>CliBridge</code> (today)</h3>
+        <p>Spawns <code>cmd -p --output-format json</code>, parses the NDJSON stream into typed events, surfaces exit codes (3 auth, 4 permission, 8 max-turns, 10 credits…).</p>
+      </div>
+      <div class="card">
+        <h3><code>HarnessBridge</code> (future)</h3>
+        <p>Once the engine's <code>@commandcode/harness</code> is published as a consumable package, the same interface can embed it in-process. The UI never changes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="windows">
+  <div class="container">
+    <h2>The Windows <code>cmd.exe</code> fix</h2>
+    <p class="sec-lead">On Windows, the CLI and the system shell share a name. This is the kind of detail that breaks apps silently.</p>
+    <p>Typing <code>cmd</code> on Windows resolves to <code>C:\Windows\System32\cmd.exe</code> — the shell — which shadows the npm-installed Command Code CLI. The app resolves the real CLI executable at runtime:</p>
+    <pre><code><span class="c"># Resolution order (resolveCmd.ts)</span>
+<span class="k">1.</span> npm global prefix → <span class="s">node_modules/command-code/dist/index.mjs</span>
+<span class="k">2.</span> a <span class="s">command-code</span> binary on PATH (skipping cmd.exe)
+<span class="k">3.</span> fall back to <span class="s">cmd</span> on non-Windows</code></pre>
+    <p style="color:var(--text-dim); font-size:14px;">Without this, every run would silently drop into an interactive shell instead of executing the agent.</p>
+  </div>
+</section>
+
+<section id="model-routing" class="bg-alt">
+  <div class="container">
+    <h2>Cost-optimal model routing</h2>
+    <p class="sec-lead">The app ships presets that match a proven project convention: spend deep-reasoning tokens where quality is judged, and cheap tokens on bulk work.</p>
+    <table>
+      <thead>
+        <tr><th>Preset</th><th>Model</th><th>When</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Build / runner (default)</td><td><code>deepseek/deepseek-v4-pro</code></td><td>Builder sessions and the gauntlet runner — long-context reasoning</td></tr>
+        <tr><td>Quality-critical</td><td><code>gpt-5.6-luna</code></td><td>The visual critic and architecture decisions</td></tr>
+        <tr><td>Bulk / mechanical</td><td><code>xiaomi/mimo-v2.5-pro</code></td><td>Repetitive, cache-heavy loops</td></tr>
+        <tr><td>Balanced</td><td><code>claude-sonnet-5</code></td><td>Everyday mixed work</td></tr>
+      </tbody>
+    </table>
+    <p style="color:var(--text-dim); font-size:14px; margin-top:12px;">The GUI never hardcodes a model id in the UI logic — it reads the catalog and offers presets, so new models are just data.</p>
+  </div>
+</section>
+
+<section id="stack">
+  <div class="container">
+    <h2>Stack &amp; layout</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Electron main</h3>
+        <p>Window lifecycle, the <code>RunManager</code> that owns one CLI child per run, IPC to the renderer, and the session/MCP/skills/agents readers.</p>
+      </div>
+      <div class="card">
+        <h3>React + Vite renderer</h3>
+        <p>The whole GUI: chat feed, session tree, gauntlet board, model picker, status bar. Context-isolated preload; no node integration in the window.</p>
+      </div>
+      <div class="card">
+        <h3>Gauntlet engine</h3>
+        <p>A pure state machine (define → split → build → check → critic → iterate) plus a critic adapter that invokes the project's <code>visual-critic</code> agent on real PNGs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <span>Command Code GUI — open source. Not affiliated with or endorsed by the Command Code team.</span>
+    <span><a href="index.html">Home</a> · <a href="gauntlet.html">Gauntlet Loop</a> · <a href="install.html">Install</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

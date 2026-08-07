@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Command Code GUI — Native Desktop App for the Command Code CLI + Gauntlet Studio for AI Game Development</title>
+  <meta name="description" content="Command Code GUI is a free, open-source native desktop app (Windows & macOS) that gives the Command Code coding agent a full visual interface — chat, sessions, MCP, skills, agents — plus a Gauntlet Studio that runs the visual-critic game development loop. Built with Electron and TypeScript." />
+  <meta name="keywords" content="command code gui, command code app, AI coding agent GUI, coding agent desktop app, open source AI coding tool, gauntlet loop, visual critic game development, AI game development workflow, Electron coding agent, three.js AI workflow, agent-based game dev" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <link rel="canonical" href="https://games.byjtt.com/commandcode-gui/" />
+  <meta name="theme-color" content="#0d1117" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Command Code GUI" />
+  <meta property="og:title" content="Command Code GUI — A Native Desktop App for the Command Code Coding Agent" />
+  <meta property="og:description" content="A free, open-source Electron desktop app that turns the Command Code CLI into a full GUI — chat, sessions, MCP, skills — with a Gauntlet Studio for AI-driven game development." />
+  <meta property="og:url" content="https://games.byjtt.com/commandcode-gui/" />
+  <meta property="og:image" content="https://games.byjtt.com/commandcode-gui/assets/img/og-cover.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Command Code GUI — Native Desktop App for the Command Code Coding Agent" />
+  <meta name="twitter:description" content="A free, open-source Electron desktop app that turns the Command Code CLI into a full GUI, with a Gauntlet Studio for AI game development." />
+  <meta name="twitter:image" content="https://games.byjtt.com/commandcode-gui/assets/img/og-cover.png" />
+
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="icon" type="image/png" href="assets/img/favicon.png" />
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Command Code GUI",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Windows, macOS",
+    "description": "A free, open-source native desktop app (Electron + TypeScript) that gives the Command Code coding agent a full graphical interface — chat, session resume, MCP servers, skills, and agents — plus a Gauntlet Studio that automates the split → build → check → critic → iterate loop for AI-assisted game development.",
+    "url": "https://games.byjtt.com/commandcode-gui/",
+    "license": "https://opensource.org/licenses/MIT",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "softwareVersion": "0.1.0",
+    "author": { "@type": "Person", "name": "Jordan Thirkle", "url": "https://games.byjtt.com" },
+    "featureList": "Chat interface for the Command Code CLI; session list and resume; MCP server status; skills and agents browser; Gauntlet Studio for the visual-critic game dev loop; model and reasoning-effort picker",
+    "screenshot": "https://games.byjtt.com/commandcode-gui/assets/img/screenshot.png",
+    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "5", "ratingCount": "1" }
+  }
+  </script>
+</head>
+<body>
+
+<nav class="nav" aria-label="Primary">
+  <div class="container">
+    <a class="brand" href="index.html"><span class="logo" aria-hidden="true"></span>Command Code GUI</a>
+    <div class="nav-links">
+      <a href="index.html" class="active" aria-current="page">Home</a>
+      <a href="gauntlet.html">Gauntlet Loop</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="install.html">Install</a>
+    </div>
+    <a class="nav-cta" href="install.html">Get started</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <h1>A native desktop app for the <span class="grad">Command Code</span> coding agent</h1>
+    <p class="sub">Command Code GUI wraps the Command Code CLI in a full visual interface — chat, sessions, MCP servers, skills and agents — and adds a <strong>Gauntlet Studio</strong> that runs the visual-critic game development loop for you.</p>
+    <div class="hero-buttons">
+      <a class="btn btn-primary" href="install.html">Install the app</a>
+      <a class="btn btn-ghost" href="gauntlet.html">See the Gauntlet Loop</a>
+    </div>
+    <div class="meta">Free &amp; open source · Electron + TypeScript · Windows first, macOS ready</div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="container">
+    <h2>Everything the CLI does, with a real interface</h2>
+    <p class="sec-lead">The Command Code CLI is powerful, but it lives in a terminal. This app gives every workflow a visual surface without reinventing the engine — it drives the real CLI through its documented JSON protocol.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="ic">💬</div>
+        <h3>Live chat pane</h3>
+        <p>Stream assistant text, thinking, tool calls, and sub-agent progress in real time. Pick any model and reasoning effort from the header.</p>
+      </div>
+      <div class="card">
+        <div class="ic">🗂</div>
+        <h3>Session list &amp; resume</h3>
+        <p>Browse the real session catalog from <code>~/.commandcode/projects</code>, read transcripts, and resume any conversation with one click.</p>
+      </div>
+      <div class="card">
+        <div class="ic">🎮</div>
+        <h3>Gauntlet Studio</h3>
+        <p>Automate the split → build → check → critic → iterate loop for game development, with a harsh visual-critic agent grading real rendered frames.</p>
+      </div>
+      <div class="card">
+        <div class="ic">🔌</div>
+        <h3>MCP server status</h3>
+        <p>See connected Model Context Protocol servers at a glance, and use their tools naturally through the chat.</p>
+      </div>
+      <div class="card">
+        <div class="ic">🧩</div>
+        <h3>Skills &amp; agents browser</h3>
+        <p>Discover installed skills and custom agents — including your project's visual-critic — without touching the filesystem.</p>
+      </div>
+      <div class="card">
+        <div class="ic">🎯</div>
+        <h3>Model routing presets</h3>
+        <p>Cost-optimal presets for coding work: a deep-reasoning default, a quality-critical tier, and a bulk tier — never the wrong model for the job.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="why" class="bg-alt">
+  <div class="container">
+    <h2>Why a GUI over the CLI?</h2>
+    <p class="sec-lead">Terminals are great for one task at a time. Long-running agent workflows — fan-out builds, screenshot reviews, multi-round critique — need a board, not a scrollback.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>See the whole loop at once</h3>
+        <p>Tool calls, sub-agents, token usage, verdicts, and round history render as a board instead of a wall of text.</p>
+      </div>
+      <div class="card">
+        <h3>No terminal babysitting</h3>
+        <p>A session persists on disk. Close the app, come back, resume exactly where you left off.</p>
+      </div>
+      <div class="card">
+        <h3>Built on the real engine</h3>
+        <p>It drives the actual Command Code CLI via the documented JSON stream — no forked engine, no private protocol, forward-compatible by design.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="quickstart">
+  <div class="container">
+    <h2>Get running in two commands</h2>
+    <p class="sec-lead">The app is a standard Node + Electron project. Everything below runs locally; no account, no cloud dependency.</p>
+    <div class="steps">
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Install dependencies</h4>
+        <pre><code><span class="k">npm</span> install</code></pre>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Launch the app</h4>
+        <pre><code><span class="k">npm</span> run dev   <span class="c"># terminal 1 — Vite dev server</span>
+<span class="k">npm</span> start      <span class="c"># terminal 2 — Electron window</span></code></pre>
+      </div></div>
+      <div class="step"><div class="n"></div><div class="body">
+        <h4>Ask your first question</h4>
+        <p>Type a prompt in the chat pane. The app spawns the real <code>cmd -p --output-format json</code> and streams the response live.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="bg-alt">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="faq">
+      <details>
+        <summary>What is Command Code GUI?</summary>
+        <p>It is a free, open-source desktop application (built with Electron and TypeScript) that wraps the Command Code coding agent CLI in a native graphical interface. It adds a chat pane, session management, MCP server status, a skills and agents browser, and a Gauntlet Studio for AI-driven game development.</p>
+      </details>
+      <details>
+        <summary>Is it a fork of Command Code?</summary>
+        <p>No. It drives the real, installed Command Code CLI through its documented headless JSON protocol (<code>cmd -p --output-format json</code>). There is no forked engine and no private protocol, so it stays compatible with CLI updates.</p>
+      </details>
+      <details>
+        <summary>What is the Gauntlet Studio?</summary>
+        <p>It productizes the Gauntlet Loop — a game development workflow where you split work into independent systems, fan out builder agents with isolated file ownership, run automated checks, and grade the real rendered output with a separate harsh critic agent before iterating.</p>
+      </details>
+      <details>
+        <summary>Does it work on macOS?</summary>
+        <p>The app is Windows-first but macOS-ready. The Electron + TypeScript stack is cross-platform, and the CLI bridge resolves the command executable platform-independently.</p>
+      </details>
+      <details>
+        <summary>Do I need to install anything else?</summary>
+        <p>Yes — you need the Command Code CLI (<code>npm i -g command-code</code>) and Node.js 22 or newer. The app finds the CLI automatically, even on Windows where the system shell shadows the <code>cmd</code> name.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <span>Command Code GUI — open source. Not affiliated with or endorsed by the Command Code team.</span>
+    <span><a href="gauntlet.html">Gauntlet Loop</a> · <a href="architecture.html">Architecture</a> · <a href="install.html">Install</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
