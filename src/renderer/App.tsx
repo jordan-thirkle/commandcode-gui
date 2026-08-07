@@ -5,8 +5,10 @@ import { EXIT_CODE_LABELS } from '../shared/bridgeEvents';
 import { ChatPane } from './ChatPane';
 import { SessionList } from './SessionList';
 import { GauntletView } from './GauntletView';
+import { WorkspaceView } from './Workspace';
+import type { PaneKind } from './Workspace';
 
-type View = 'chat' | 'sessions' | 'gauntlet' | 'skills' | 'mcp';
+type View = PaneKind;
 
 export interface RunState {
   model: string;
@@ -47,6 +49,8 @@ export function App(): React.JSX.Element {
         return;
       }
       if (e.key === 'Escape') {
+        // Don't abort when the user is just closing a native <select> dropdown.
+        if (e.target instanceof HTMLSelectElement) return;
         if (paletteOpen) {
           setPaletteOpen(false);
         } else if (statusRef.current.running) {
@@ -110,14 +114,15 @@ export function App(): React.JSX.Element {
     <div className="app">
       <aside className="sidebar">
         <h2>Command Code</h2>
-        {(['chat', 'sessions', 'gauntlet', 'skills', 'mcp'] as View[]).map((v) => (
-          <div
+        {(['chat', 'sessions', 'gauntlet', 'skills'] as View[]).map((v) => (
+          <button
+            type="button"
             key={v}
             className={`nav-item${view === v ? ' active' : ''}`}
             onClick={() => go(v)}
           >
             {v[0].toUpperCase() + v.slice(1)}
-          </div>
+          </button>
         ))}
         <div className="sidebar-footer">
           <button className="palette-btn" onClick={() => setPaletteOpen(true)} title="Command palette (Ctrl+K)">
@@ -157,18 +162,36 @@ export function App(): React.JSX.Element {
       </header>
 
       <main className="main">
-        {view === 'chat' && (
-          <ChatPane
-            running={status.running}
-            onRun={run}
-            onAbort={abort}
-            sessionId={status.sessionId}
-          />
-        )}
-        {view === 'sessions' && <SessionList onResume={(id) => run('', { resume: id })} />}
-        {view === 'gauntlet' && <GauntletView onRun={run} running={status.running} />}
-        {view === 'skills' && <SkillsMcpPanel />}
-        {view === 'mcp' && <SkillsMcpPanel />}
+        <WorkspaceView
+          active={view}
+          onActivate={(p) => go(p)}
+          panes={{
+            chat: {
+              label: 'Chat',
+              node: (
+                <ChatPane
+                  running={status.running}
+                  onRun={run}
+                  onAbort={abort}
+                  sessionId={status.sessionId}
+                  active={view === 'chat'}
+                />
+              ),
+            },
+            sessions: {
+              label: 'Sessions',
+              node: <SessionList onResume={(id) => run('', { resume: id })} />,
+            },
+            gauntlet: {
+              label: 'Gauntlet Studio',
+              node: <GauntletView onRun={run} running={status.running} />,
+            },
+            skills: {
+              label: 'Skills / MCP',
+              node: <SkillsMcpPanel />,
+            },
+          }}
+        />
       </main>
 
       <footer className="status">
@@ -243,8 +266,7 @@ function CommandPalette({ current, onPick, onClose }: {
     { v: 'chat', label: 'Chat', hint: 'New run / continue' },
     { v: 'sessions', label: 'Sessions', hint: 'List, resume, transcript' },
     { v: 'gauntlet', label: 'Gauntlet Studio', hint: 'Game-dev quality loop' },
-    { v: 'skills', label: 'Skills', hint: 'Installed skills' },
-    { v: 'mcp', label: 'MCP servers', hint: 'Server status' },
+    { v: 'skills', label: 'Skills / MCP', hint: 'Installed skills, servers' },
   ];
   const filtered = items.filter((i) =>
     i.label.toLowerCase().includes(query.toLowerCase()),
@@ -300,7 +322,7 @@ function SkillsMcpPanel(): React.JSX.Element {
   }, []);
 
   return (
-    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="skills-panel">
       <section>
         <h3>Skills</h3>
         <ul>

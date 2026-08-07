@@ -164,6 +164,144 @@ body,
   font-size: 13px;
 }
 
+/* ---- Workspace (multi-pane) ---- */
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.workspace-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px 0;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.ws-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ws-tab:hover {
+  color: var(--text);
+  background: var(--panel-2);
+}
+.ws-tab.open {
+  color: var(--text);
+}
+.ws-tab.active {
+  color: var(--text);
+  background: var(--panel-2);
+  border-color: var(--border);
+  border-bottom-color: var(--panel-2);
+}
+.ws-tab-x {
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: 3px;
+}
+.ws-tab-x:hover {
+  color: var(--red);
+  background: var(--panel);
+}
+
+.ws-hint {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-family: var(--mono);
+  padding: 0 8px;
+  opacity: 0.7;
+}
+
+.workspace-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* Pane layout depends on how many are open:
+   1 → full; 2 → active 60/40; 3 → active full top row + 2 below;
+   4 → active full top row + 3 below. */
+.workspace-body.ws-count-1 {
+  grid-template-columns: 1fr;
+}
+.workspace-body.ws-count-2 {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+.workspace-body.ws-count-3 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1.2fr) minmax(0, 1fr);
+}
+.workspace-body.ws-count-4 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1.3fr) minmax(0, 1fr);
+}
+.workspace-body.ws-count-3 .workspace-pane.focused,
+.workspace-body.ws-count-4 .workspace-pane.focused {
+  grid-column: 1 / -1;
+}
+
+.workspace-pane {
+  min-width: 0;
+  min-height: 0;
+  display: none;
+  overflow: hidden;
+  background: var(--bg);
+}
+.workspace-pane.visible {
+  display: flex;
+  flex-direction: column;
+}
+.workspace-pane.focused {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.workspace-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+/* Pane internals must scroll when they don't fit the cell. */
+.gauntlet-board {
+  overflow-y: auto;
+}
+.session-list {
+  overflow-y: auto;
+  min-height: 0;
+}
+.skills-panel {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
 .header {
   grid-area: header;
   background: var(--panel);

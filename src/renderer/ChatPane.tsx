@@ -15,9 +15,10 @@ interface Props {
   onRun: (prompt: string, opts?: { resume?: string; continueRecent?: boolean }) => void;
   onAbort: () => void;
   sessionId?: string;
+  active?: boolean;
 }
 
-export function ChatPane({ running, onRun, onAbort, sessionId }: Props): React.JSX.Element {
+export function ChatPane({ running, onRun, onAbort, sessionId, active }: Props): React.JSX.Element {
   const [input, setInput] = useState('');
   const [entries, setEntries] = useState<FeedEntry[]>([]);
   const [assistantAcc, setAssistantAcc] = useState('');
@@ -97,8 +98,8 @@ export function ChatPane({ running, onRun, onAbort, sessionId }: Props): React.J
   };
 
   useEffect(() => {
-    feedRef.current?.scrollTo(0, feedRef.current.scrollHeight);
-  }, [entries]);
+    if (active) feedRef.current?.scrollTo(0, feedRef.current.scrollHeight);
+  }, [entries, active]);
 
   return (
     <div className="chat">
@@ -130,7 +131,7 @@ export function ChatPane({ running, onRun, onAbort, sessionId }: Props): React.J
             Stop
           </button>
         ) : (
-          <button onClick={submit} disabled={!input.trim()} title="Run (Ctrl+Enter)">
+          <button onClick={submit} disabled={!input.trim()} title="Run (Enter)">
             Run
           </button>
         )}

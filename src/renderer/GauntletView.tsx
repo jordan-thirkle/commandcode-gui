@@ -48,8 +48,6 @@ export function GauntletView({ onRun, running }: Props): React.JSX.Element {
   });
   const [state, setState] = useState(() => createInitialState(config));
   const [busy, setBusy] = useState(false);
-  const stateRef = useRef(state);
-  stateRef.current = state;
 
   // Wire the app's run/status into a local gauntlet execution. The runner is
   // transport-agnostic; here we drive it with the same onRun the chat uses,
@@ -57,65 +55,65 @@ export function GauntletView({ onRun, running }: Props): React.JSX.Element {
   const start = (): void => {
     if (busy) return;
     setBusy(true);
-    setState(createInitialState(config));
-
+    let next = createInitialState(config);
     const dispatch = (action: Parameters<typeof gauntletReducer>[1]): void => {
-      setState((s) => gauntletReducer(s, action));
+      next = gauntletReducer(next, action);
+      setState(next);
     };
 
     void (async () => {
-      dispatch({ type: 'start-round' });
-      const round = stateRef.current.rounds[stateRef.current.rounds.length - 1];
-      for (const system of round.systems) {
-        dispatch({ type: 'system-start', systemId: system.id });
-        try {
-          const text = await new Promise<string>((resolve) => {
-            const unsub = window.cmdgui?.onRunEvent((evt) => {
-              if (evt.kind === 'summary') {
-                unsub?.();
-                resolve(evt.summary.finalText);
-              }
+      try {
+        dispatch({ type: 'start-round' });
+        const round = next.rounds[next.rounds.length - 1];
+        for (const system of round?.systems ?? []) {
+          dispatch({ type: 'system-start', systemId: system.id });
+          try {
+            const text = await new Promise<string>((resolve) => {
+              const unsub = window.cmdgui?.onRunEvent((evt) => {
+                if (evt.kind === 'summary') {
+                  unsub?.();
+                  resolve(evt.summary.finalText);
+                }
+              });
+              onRun(system.prompt);
             });
-            onRun(system.prompt);
-          });
-          dispatch({ type: 'system-done', systemId: system.id, ok: true, output: text });
-        } catch (e) {
+            dispatch({ type: 'system-done', systemId: system.id, ok: true, output: text });
+          } catch (e) {
+            dispatch({
+              type: 'system-done',
+              systemId: system.id,
+              ok: false,
+              output: e instanceof Error ? e.message : String(e),
+            });
+          }
+        }
+
+        for (const check of config.checks) {
+          // In the real app these run via RunManager; here we surface them as
+          // pending so the board reflects the gate even without a local shell.
           dispatch({
-            type: 'system-done',
-            systemId: system.id,
-            ok: false,
-            output: e instanceof Error ? e.message : String(e),
+            type: 'check-result',
+            check: { name: check.name, pass: true, detail: 'gate recorded' },
           });
         }
-      }
-
-      for (const check of config.checks) {
-        // In the real app these run via RunManager; here we surface them as
-        // pending so the board reflects the gate even without a local shell.
+        dispatch({ type: 'checks-complete' });
         dispatch({
-          type: 'check-result',
-          check: { name: check.name, pass: true, detail: 'gate recorded' },
+          type: 'verdict',
+          verdict: {
+            pass: true,
+            raw: 'PASS — the independent critic cleared the frame after this round.',
+          },
         });
+      } catch (e) {
+        dispatch({
+          type: 'set-error',
+          message: e instanceof Error ? e.message : String(e),
+        });
+      } finally {
+        setBusy(false);
       }
-      dispatch({ type: 'checks-complete' });
-      dispatch({
-        type: 'verdict',
-        verdict: {
-          pass: true,
-          raw: 'PASS — the independent critic cleared the frame after this round.',
-        },
-      });
-      setBusy(false);
     })();
   };
-
-  useEffect(() => {
-    if (window.cmdgui) {
-      void window.cmdgui.listAgents().then((a) => {
-        if (a.length === 0) return;
-      });
-    }
-  }, []);
 
   const round = state.rounds[state.rounds.length - 1];
 
