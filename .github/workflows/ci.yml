@@ -4,12 +4,17 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     name: Test, typecheck, build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -35,14 +40,18 @@ jobs:
           node tests/smoke-compiled-main.mjs
           node tests/bridge-e2e.mjs
 
+  # Electron build runs only on release tags to avoid consuming expensive
+  # macOS/Windows minutes on every commit. ~66 min/week saved.
   electron-build:
     name: Electron build (${{ matrix.os }})
     needs: test
+    if: startsWith(github.ref, 'refs/tags/release/v')
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
